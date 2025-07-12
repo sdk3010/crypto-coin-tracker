@@ -52,7 +52,7 @@ const Header = () => {
               <Coins className="h-6 w-6 text-white" />
             </div>
             <div className="flex flex-col">
-              <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              <span className="text-xl font-bold text-foreground">
                 CryptoTracker
               </span>
               <span className="text-xs text-muted-foreground">
