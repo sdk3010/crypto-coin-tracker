@@ -1,13 +1,22 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Moon, Sun, TrendingUp, Wallet, BarChart3, Newspaper, Coins } from 'lucide-react';
+import { Moon, Sun, TrendingUp, Wallet, BarChart3, Newspaper, Coins, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useCrypto } from '@/contexts/CryptoContext';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 const Header = () => {
   const { theme, toggleTheme } = useTheme();
   const { totalPortfolioValue } = useCrypto();
+  const { user, signOut } = useAuth();
   const location = useLocation();
 
   const navigation = [
@@ -73,7 +82,7 @@ const Header = () => {
             })}
           </nav>
 
-          {/* Theme Toggle */}
+          {/* Theme Toggle & User Menu */}
           <div className="flex items-center space-x-2">
             <Button
               variant="ghost"
@@ -90,6 +99,30 @@ const Header = () => {
                 {theme === 'light' ? 'Dark' : 'Light'}
               </span>
             </Button>
+            
+            {user && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback>
+                        {user.email?.charAt(0).toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuItem className="flex flex-col items-start">
+                    <div className="text-sm font-medium">{user.user_metadata?.display_name || 'User'}</div>
+                    <div className="text-xs text-muted-foreground">{user.email}</div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={signOut}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
 

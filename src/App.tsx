@@ -5,11 +5,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { CryptoProvider } from "@/contexts/CryptoContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import Layout from "@/components/layout/Layout";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import Dashboard from "@/pages/Dashboard";
 import Portfolio from "@/pages/Portfolio";
 import Analytics from "@/pages/Analytics";
 import News from "@/pages/News";
+import Auth from "@/pages/Auth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -17,23 +20,32 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
-      <CryptoProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Layout>
+      <AuthProvider>
+        <CryptoProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
               <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/portfolio" element={<Portfolio />} />
-                <Route path="/analytics" element={<Analytics />} />
-                <Route path="/news" element={<News />} />
-                <Route path="*" element={<NotFound />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="*" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <Routes>
+                        <Route path="/" element={<Dashboard />} />
+                        <Route path="/portfolio" element={<Portfolio />} />
+                        <Route path="/analytics" element={<Analytics />} />
+                        <Route path="/news" element={<News />} />
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
+                    </Layout>
+                  </ProtectedRoute>
+                } />
               </Routes>
-            </Layout>
-          </BrowserRouter>
-        </TooltipProvider>
-      </CryptoProvider>
+            </BrowserRouter>
+          </TooltipProvider>
+        </CryptoProvider>
+      </AuthProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );
