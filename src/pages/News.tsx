@@ -1,45 +1,68 @@
 import React from 'react';
-import { ExternalLink, Clock } from 'lucide-react';
+import { ExternalLink, Clock, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useQuery } from '@tanstack/react-query';
+import { formatDistanceToNow } from 'date-fns';
 
-// Mock news data - in real app this would come from NewsAPI
-const mockNews = [
-  {
-    id: 1,
-    title: "Bitcoin Reaches New All-Time High Amid Institutional Adoption",
-    description: "Major financial institutions continue to embrace Bitcoin as a store of value, driving unprecedented demand.",
-    url: "#",
-    publishedAt: "2 hours ago",
-    source: "CryptoNews",
-  },
-  {
-    id: 2,
-    title: "Ethereum 2.0 Staking Rewards Hit Record Levels",
-    description: "The transition to proof-of-stake has created new opportunities for passive income generation.",
-    url: "#",
-    publishedAt: "4 hours ago",
-    source: "DeFi Daily",
-  },
-  {
-    id: 3,
-    title: "Regulatory Clarity Boosts Crypto Market Confidence",
-    description: "New guidelines from financial regulators provide clearer framework for cryptocurrency operations.",
-    url: "#",
-    publishedAt: "6 hours ago",
-    source: "Blockchain Tribune",
-  },
-  {
-    id: 4,
-    title: "NFT Market Shows Signs of Recovery",
-    description: "Trading volumes increase as new utility-focused projects gain traction.",
-    url: "#",
-    publishedAt: "8 hours ago",
-    source: "Digital Assets Today",
-  },
-];
+const CRYPTO_NEWS_API_KEY = '2f8b5402-afb0-4ecd-bce7-59341a196c72';
+
+interface NewsArticle {
+  id: string;
+  title: string;
+  text: string;
+  url: string;
+  source_name: string;
+  date: string;
+  sentiment: string;
+  type: string;
+}
+
+const fetchCryptoNews = async (): Promise<NewsArticle[]> => {
+  const response = await fetch(`https://cryptonews-api.com/api/v1/news?tickers=BTC,ETH&items=10&token=${CRYPTO_NEWS_API_KEY}`);
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch crypto news');
+  }
+  
+  const data = await response.json();
+  return data.data || [];
+};
 
 const News = () => {
+  const { data: news, isLoading, error } = useQuery({
+    queryKey: ['crypto-news'],
+    queryFn: fetchCryptoNews,
+    refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
+  });
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6 animate-fade-in-up">
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+          Crypto News
+        </h1>
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="ml-2 text-muted-foreground">Loading latest crypto news...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6 animate-fade-in-up">
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+          Crypto News
+        </h1>
+        <Card className="p-6 text-center">
+          <p className="text-muted-foreground">Failed to load crypto news. Please try again later.</p>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 animate-fade-in-up">
       <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
@@ -47,22 +70,41 @@ const News = () => {
       </h1>
 
       <div className="grid gap-6">
-        {mockNews.map((article) => (
+        {news?.map((article) => (
           <Card key={article.id} className="hover-lift card-shadow">
             <CardHeader>
-              <CardTitle className="text-xl">{article.title}</CardTitle>
+              <CardTitle className="text-xl leading-tight">{article.title}</CardTitle>
               <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                 <div className="flex items-center space-x-1">
                   <Clock className="h-4 w-4" />
-                  <span>{article.publishedAt}</span>
+                  <span>{formatDistanceToNow(new Date(article.date), { addSuffix: true })}</span>
                 </div>
                 <span>•</span>
-                <span>{article.source}</span>
+                <span>{article.source_name}</span>
+                {article.sentiment && (
+                  <>
+                    <span>•</span>
+                    <span className={`capitalize ${
+                      article.sentiment === 'Positive' ? 'text-green-500' :
+                      article.sentiment === 'Negative' ? 'text-red-500' :
+                      'text-yellow-500'
+                    }`}>
+                      {article.sentiment}
+                    </span>
+                  </>
+                )}
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground mb-4">{article.description}</p>
-              <Button variant="outline" size="sm" className="hover-lift">
+              <p className="text-muted-foreground mb-4 line-clamp-3">
+                {article.text.length > 200 ? `${article.text.substring(0, 200)}...` : article.text}
+              </p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="hover-lift"
+                onClick={() => window.open(article.url, '_blank')}
+              >
                 <ExternalLink className="h-4 w-4 mr-2" />
                 Read More
               </Button>
