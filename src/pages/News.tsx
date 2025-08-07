@@ -10,22 +10,37 @@ const CRYPTO_NEWS_API_KEY = '2f8b5402-afb0-4ecd-bce7-59341a196c72';
 interface NewsArticle {
   id: string;
   title: string;
-  text: string;
-  url: string;
-  source_name: string;
-  date: string;
+  summary: string;
+  source: string;
+  publishedAt: string;
+  tags: string[];
   sentiment: string;
-  type: string;
+}
+
+interface ApiResponse {
+  status: string;
+  data: NewsArticle[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    hasNext: boolean;
+  };
 }
 
 const fetchCryptoNews = async (): Promise<NewsArticle[]> => {
-  const response = await fetch(`https://cryptonews-api.com/api/v1/news?tickers=BTC,ETH&items=10&token=${CRYPTO_NEWS_API_KEY}`);
+  const response = await fetch('https://api.cryptonewsapi.online/api/v1/news', {
+    headers: {
+      'X-API-KEY': CRYPTO_NEWS_API_KEY,
+      'Content-Type': 'application/json'
+    }
+  });
   
   if (!response.ok) {
     throw new Error('Failed to fetch crypto news');
   }
   
-  const data = await response.json();
+  const data: ApiResponse = await response.json();
   return data.data || [];
 };
 
@@ -77,16 +92,16 @@ const News = () => {
               <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                 <div className="flex items-center space-x-1">
                   <Clock className="h-4 w-4" />
-                  <span>{formatDistanceToNow(new Date(article.date), { addSuffix: true })}</span>
+                  <span>{formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true })}</span>
                 </div>
                 <span>•</span>
-                <span>{article.source_name}</span>
+                <span>{article.source}</span>
                 {article.sentiment && (
                   <>
                     <span>•</span>
                     <span className={`capitalize ${
-                      article.sentiment === 'Positive' ? 'text-green-500' :
-                      article.sentiment === 'Negative' ? 'text-red-500' :
+                      article.sentiment === 'positive' ? 'text-green-500' :
+                      article.sentiment === 'negative' ? 'text-red-500' :
                       'text-yellow-500'
                     }`}>
                       {article.sentiment}
@@ -97,13 +112,13 @@ const News = () => {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-4 line-clamp-3">
-                {article.text.length > 200 ? `${article.text.substring(0, 200)}...` : article.text}
+                {article.summary.length > 200 ? `${article.summary.substring(0, 200)}...` : article.summary}
               </p>
               <Button 
                 variant="outline" 
                 size="sm" 
                 className="hover-lift"
-                onClick={() => window.open(article.url, '_blank')}
+                onClick={() => window.open(`#article-${article.id}`, '_blank')}
               >
                 <ExternalLink className="h-4 w-4 mr-2" />
                 Read More
