@@ -5,38 +5,25 @@ import { Button } from '@/components/ui/button';
 import { useQuery } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
 
-const CRYPTO_NEWS_API_KEY = '2f8b5402-afb0-4ecd-bce7-59341a196c72';
+const CRYPTO_NEWS_API_KEY = '941EA98E444E69E0582BCAD01C7B3101';
 
 interface NewsArticle {
-  id: string;
   title: string;
-  summary: string;
+  snippet: string;
+  url: string;
+  published_at: string;
   source: string;
-  publishedAt: string;
-  tags: string[];
-  sentiment: string;
+  uuid: string;
 }
 
 interface ApiResponse {
-  status: string;
   data: NewsArticle[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    hasNext: boolean;
-  };
 }
 
 const fetchCryptoNews = async (): Promise<NewsArticle[]> => {
   try {
-    console.log('Fetching crypto news...');
-    const response = await fetch('https://api.cryptonewsapi.online/api/v1/news', {
-      headers: {
-        'X-API-KEY': CRYPTO_NEWS_API_KEY,
-        'Content-Type': 'application/json'
-      }
-    });
+    console.log('Fetching crypto news from TheNewsAPI...');
+    const response = await fetch(`https://api.thenewsapi.net/crypto?apikey=${CRYPTO_NEWS_API_KEY}`);
     
     console.log('Response status:', response.status);
     console.log('Response ok:', response.ok);
@@ -110,39 +97,27 @@ const News = () => {
 
       <div className="grid gap-6">
         {Array.isArray(news) ? news.map((article) => (
-          <Card key={article.id} className="hover-lift card-shadow">
+          <Card key={article.uuid} className="hover-lift card-shadow">
             <CardHeader>
               <CardTitle className="text-xl leading-tight">{article.title}</CardTitle>
               <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                 <div className="flex items-center space-x-1">
                   <Clock className="h-4 w-4" />
-                  <span>{formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true })}</span>
+                  <span>{formatDistanceToNow(new Date(article.published_at), { addSuffix: true })}</span>
                 </div>
                 <span>•</span>
                 <span>{article.source}</span>
-                {article.sentiment && (
-                  <>
-                    <span>•</span>
-                    <span className={`capitalize ${
-                      article.sentiment === 'positive' ? 'text-green-500' :
-                      article.sentiment === 'negative' ? 'text-red-500' :
-                      'text-yellow-500'
-                    }`}>
-                      {article.sentiment}
-                    </span>
-                  </>
-                )}
               </div>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-4 line-clamp-3">
-                {article.summary.length > 200 ? `${article.summary.substring(0, 200)}...` : article.summary}
+                {article.snippet.length > 200 ? `${article.snippet.substring(0, 200)}...` : article.snippet}
               </p>
               <Button 
                 variant="outline" 
                 size="sm" 
                 className="hover-lift"
-                onClick={() => window.open(`#article-${article.id}`, '_blank')}
+                onClick={() => window.open(article.url, '_blank')}
               >
                 <ExternalLink className="h-4 w-4 mr-2" />
                 Read More
