@@ -68,6 +68,13 @@ const News = () => {
     refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
   });
 
+  // Debug logging
+  console.log('News component - news:', news);
+  console.log('News component - isLoading:', isLoading);
+  console.log('News component - error:', error);
+  console.log('News component - news type:', typeof news);
+  console.log('News component - is news array?', Array.isArray(news));
+
   if (isLoading) {
     return (
       <div className="space-y-6 animate-fade-in-up">
@@ -102,7 +109,7 @@ const News = () => {
       </h1>
 
       <div className="grid gap-6">
-        {(news || []).map((article) => (
+        {Array.isArray(news) ? news.map((article) => (
           <Card key={article.id} className="hover-lift card-shadow">
             <CardHeader>
               <CardTitle className="text-xl leading-tight">{article.title}</CardTitle>
@@ -142,7 +149,11 @@ const News = () => {
               </Button>
             </CardContent>
           </Card>
-        ))}
+        )) : (
+          <Card className="p-6 text-center">
+            <p className="text-muted-foreground">No news available at the moment.</p>
+          </Card>
+        )}
       </div>
     </div>
   );
