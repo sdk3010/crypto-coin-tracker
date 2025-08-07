@@ -29,19 +29,36 @@ interface ApiResponse {
 }
 
 const fetchCryptoNews = async (): Promise<NewsArticle[]> => {
-  const response = await fetch('https://api.cryptonewsapi.online/api/v1/news', {
-    headers: {
-      'X-API-KEY': CRYPTO_NEWS_API_KEY,
-      'Content-Type': 'application/json'
+  try {
+    console.log('Fetching crypto news...');
+    const response = await fetch('https://api.cryptonewsapi.online/api/v1/news', {
+      headers: {
+        'X-API-KEY': CRYPTO_NEWS_API_KEY,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    console.log('Response status:', response.status);
+    console.log('Response ok:', response.ok);
+    
+    if (!response.ok) {
+      console.error('Response not ok:', response.status, response.statusText);
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-  });
-  
-  if (!response.ok) {
-    throw new Error('Failed to fetch crypto news');
+    
+    const data: ApiResponse = await response.json();
+    console.log('API Response:', data);
+    
+    if (data && data.data && Array.isArray(data.data)) {
+      return data.data;
+    } else {
+      console.warn('Unexpected data structure:', data);
+      return [];
+    }
+  } catch (error) {
+    console.error('Error fetching crypto news:', error);
+    return []; // Always return an array
   }
-  
-  const data: ApiResponse = await response.json();
-  return data.data || [];
 };
 
 const News = () => {
@@ -85,7 +102,7 @@ const News = () => {
       </h1>
 
       <div className="grid gap-6">
-        {news?.map((article) => (
+        {(news || []).map((article) => (
           <Card key={article.id} className="hover-lift card-shadow">
             <CardHeader>
               <CardTitle className="text-xl leading-tight">{article.title}</CardTitle>
